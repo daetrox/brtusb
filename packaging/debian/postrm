@@ -1,0 +1,10 @@
+#!/bin/sh
+# Refresca dependencias despues de quitar el paquete.
+set -e
+
+depmod -a >/dev/null 2>&1 || true
+if command -v update-initramfs >/dev/null 2>&1; then
+	update-initramfs -u >/dev/null 2>&1 || true
+fi
+
+exit 0

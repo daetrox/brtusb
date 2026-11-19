@@ -1,0 +1,31 @@
+#!/bin/sh
+# Compila e instala el driver con DKMS al instalar el paquete.
+set -e
+
+NAME=brtusb
+VER=1.1
+
+if ! command -v dkms >/dev/null 2>&1; then
+	echo "AVISO: dkms no esta instalado; el driver no se compilara." >&2
+	exit 0
+fi
+
+# En una actualizacion, quitar el registro anterior antes de volver a anadirlo.
+dkms remove -m "$NAME" -v "$VER" --all >/dev/null 2>&1 || true
+
+if dkms add -m "$NAME" -v "$VER" >/dev/null 2>&1 &&
+   dkms build -m "$NAME" -v "$VER" >/dev/null 2>&1 &&
+   dkms install -m "$NAME" -v "$VER" --force >/dev/null 2>&1; then
+	echo "brtusb: driver compilado e instalado para $(uname -r)"
+else
+	echo "AVISO: no se pudo compilar brtusb para $(uname -r)." >&2
+	echo "        Instala los headers: linux-headers-$(uname -r)" >&2
+	echo "        y reinstala: sudo apt install --reinstall brtusb-dkms" >&2
+fi
+
+depmod -a >/dev/null 2>&1 || true
+if command -v update-initramfs >/dev/null 2>&1; then
+	update-initramfs -u >/dev/null 2>&1 || true
+fi
+
+exit 0
